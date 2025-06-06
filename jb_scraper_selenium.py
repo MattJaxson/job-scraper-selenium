@@ -6,11 +6,10 @@ import time
 
 def indeed_job_scraper(search_query, location, num_pages=1, delay=1.5):
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless')  # no window pops up
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
 
-    service = Service('/usr/local/bin/chromedriver')  # default path from brew
+    service = Service('/opt/homebrew/bin/chromedriver')  # updated path
     driver = webdriver.Chrome(service=service, options=options)
 
     jobs = []

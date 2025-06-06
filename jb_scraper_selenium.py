@@ -1,16 +1,16 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
+import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 import pandas as pd
 import time
+import random
 
-def indeed_job_scraper(search_query, location, num_pages=1, delay=1.5):
-    options = webdriver.ChromeOptions()
+def indeed_job_scraper(search_query, location, num_pages=1):
+    options = uc.ChromeOptions()
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
+    # options.add_argument('--headless')  # Commented out for now to see CAPTCHA pages
 
-    service = Service('/opt/homebrew/bin/chromedriver')  # updated path
-    driver = webdriver.Chrome(service=service, options=options)
+    driver = uc.Chrome(options=options)
 
     jobs = []
 
@@ -18,7 +18,8 @@ def indeed_job_scraper(search_query, location, num_pages=1, delay=1.5):
         start = page * 10
         url = f'https://www.indeed.com/jobs?q={search_query}&l={location}&start={start}'
         driver.get(url)
-        time.sleep(delay)
+        print(f"Scraping page {page + 1}: {url}")
+        time.sleep(random.uniform(5, 10))  # Random delay to be more human-like
 
         job_cards = driver.find_elements(By.CLASS_NAME, 'job_seen_beacon')
 
@@ -33,9 +34,9 @@ def indeed_job_scraper(search_query, location, num_pages=1, delay=1.5):
                 company = None
             try:
                 location_elem = job_card.find_element(By.CLASS_NAME, 'companyLocation')
-                location = location_elem.text
+                location_text = location_elem.text
             except:
-                location = None
+                location_text = None
             try:
                 salary_elem = job_card.find_element(By.CLASS_NAME, 'salary-snippet')
                 salary = salary_elem.text
@@ -50,7 +51,7 @@ def indeed_job_scraper(search_query, location, num_pages=1, delay=1.5):
             job = {
                 'title': title,
                 'company': company,
-                'location': location,
+                'location': location_text,
                 'salary': salary,
                 'summary': summary
             }
@@ -67,5 +68,5 @@ def save_to_csv(jobs, filename='matt_job_listings.csv'):
 if __name__ == '__main__':
     search_query = 'data scientist'
     location = 'Detroit, MI'
-    jobs = indeed_job_scraper(search_query, location, num_pages=3, delay=2)
+    jobs = indeed_job_scraper(search_query, location, num_pages=1)  # Limit to 1 page for now
     save_to_csv(jobs)
